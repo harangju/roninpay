@@ -21,5 +21,11 @@ Pending... should work with [anaconda](https://www.anaconda.com/products/individ
 ### Payments
 
 ##### Mac
-1. Fill in the `payments.xlsx` file with the necessary information. Note: Multiple payments from the same address are executed with a few minutes in between each transaction so that transactions have time to be included in blocks before submitting another transaction from the same address.
-2. Run `./payout.sh` in this directory.
+1. Fill in the `payments.xlsx` file with the necessary information. 
+    - NOTE: Multiple payments from the same address are executed with a few minutes in between each transaction so that transactions have time to be included in blocks before submitting another transaction from the same address.
+    - WARNING: You must write your private keys in the `payments.xlsx` file. I recommend that you make a temporary address, send only the $SLP you need for the payments to that address, and use that address to send out payments. Further, you should test with a small amount to make sure that you know how to use the code.
+3. Run `./payout.sh` in this directory.
+
+### Disclaimer
+
+**Use this code at your own risk**: None of contributors or anyone else connected with this code, in any way whatsoever, can be responsible for your use of the code in this repository.
