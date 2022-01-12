@@ -1,0 +1,13 @@
+name: roninpay
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - xlrd
+  - ipython
+  - pandas
+  - numpy
+  - pip
+  - pip:
+    - xlwings
+    - web3
