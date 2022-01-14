@@ -13,10 +13,10 @@ Payment = namedtuple("payment", "name private_key slp_balance account_address no
 
 def parseRoninAddress(address):
   assert(address.startswith(RONIN_ADDRESS_PREFIX))
-  return Web3.toChecksumAddress(address.replace(RONIN_ADDRESS_PREFIX, "0x"))
+  return Web3.toChecksumAddress(address.strip().replace(RONIN_ADDRESS_PREFIX, "0x"))
 
 def formatRoninAddress(address):
-  return address.replace("0x", RONIN_ADDRESS_PREFIX)
+  return address.strip().replace("0x", RONIN_ADDRESS_PREFIX)
 
 def log(message="", end="\n"):
   print(message, end = end, flush=True)
@@ -93,10 +93,11 @@ if (len(payments) == 0):
 
 log("\nPlease review the payments:")
 time.sleep(1)
-for name, ps in payments.items():
-  log(f"\nPayment from '{name}'")
+for from_address, ps in payments.items():
+  log(f"\nPayment from '{from_address}'")
   for payment in ps:
-    log(f"├─ Nonce: {payment.nonce}")
+    log(f"├─ Name: {payment.name}")
+    log(f"│  Nonce: {payment.nonce}")
     log(f"│  SLP amount: {payment.slp_balance} SLP")
     log(f"│  From: {formatRoninAddress(payment.transaction.from_address)}")
     log(f"│  To: {formatRoninAddress(payment.transaction.to_address)}\n")
@@ -107,13 +108,16 @@ if (input() != "y"):
 
 while len([payment for ps in payments.values() for payment in ps]) > 0:
   log("Executing payments...\n")
-  for name, ps in payments.items():
+  for from_address, ps in payments.items():
     if len(ps)==0:
       continue
-    log(f"Executing payment for '{name}'")
+    log(f"Executing payment for '{from_address}'")
     payment = ps[0]
     if (nonces[payment.account_address] == payment.nonce):
-      log(f"├─ Payment: sending {payment.transaction.amount} SLP from {formatRoninAddress(payment.transaction.from_address)} to {formatRoninAddress(payment.transaction.to_address)}...")
+      log(f"├─ Name: {payment.name}")
+      log(f"│  Payment: sending {payment.transaction.amount} SLP")
+      log(f"│  From: {formatRoninAddress(payment.transaction.from_address)}")
+      log(f"│  To: {formatRoninAddress(payment.transaction.to_address)}")
       try:
         hash = slp_utils.transfer_slp(payment.transaction, payment.private_key, payment.nonce)
         log(f"│  Hash: {hash}")
@@ -135,7 +139,6 @@ while len([payment for ps in payments.values() for payment in ps]) > 0:
   log()
 
   log("Detecting payments that failed...")
-  completed_payments = []
   for name, ps in payments.items():
     if len(ps)==0:
      continue
@@ -143,13 +146,13 @@ while len([payment for ps in payments.values() for payment in ps]) > 0:
     expected_nonce = payment.nonce + 1
     actual_nonce = nonces[payment.account_address] = slp_utils.web3.eth.get_transaction_count(payment.account_address)
 
-  if (actual_nonce == expected_nonce):
-    if len(payments[name]) > 0:
-      payments[name].pop(0)
-  else:
-    log(f"Payment for '{payment.name}' didn't succeeded completely.")
-    log(f"Expected nonce: {expected_nonce}. Actual nonce: {actual_nonce}")
-    log(f"Will try payment again for '{payment.name}' at nonce {expected_nonce}.")
+    if (actual_nonce == expected_nonce):
+      if len(payments[name]) > 0:
+        payments[name].pop(0)
+    else:
+      log(f"Payment for '{payment.name}' didn't succeeded completely.")
+      log(f"Expected nonce: {expected_nonce}. Actual nonce: {actual_nonce}")
+      log(f"Will try payment again for '{payment.name}' at nonce {expected_nonce}.")
 
   total_payments = [payment for ps in payments.values() for payment in ps]
   if len(total_payments) == 0:
